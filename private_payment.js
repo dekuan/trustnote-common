@@ -70,7 +70,7 @@ function validateAndSavePrivatePaymentChain(arrPrivateElements, callbacks){
 							if (rows.length > 1)
 								throw Error("more than one output "+sql+' '+params.join(', '));
 							if (rows.length > 0 && rows[0].address){ // we could have this output already but the address is still hidden
-								console.log("duplicate private payment "+params.join(', '));
+								//#console.log("duplicate private payment "+params.join(', '));
 								return transaction_callbacks.ifOk();
 							}
 							var assetModule = objAsset.fixed_denominations ? indivisibleAsset : divisibleAsset;

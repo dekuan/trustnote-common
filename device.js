@@ -125,12 +125,12 @@ function setNewDeviceAddress(device_address){
 }
 
 function setDeviceName(device_name){
-	console.log("setDeviceName", device_name);
+	//#console.log("setDeviceName", device_name);
 	my_device_name = device_name;
 }
 
 function setDeviceHub(device_hub){
-	console.log("setDeviceHub", device_hub);
+	//#console.log("setDeviceHub", device_hub);
 	var bChanged = (device_hub !== my_device_hub);
 	my_device_hub = device_hub;
 	if (bChanged){
@@ -148,7 +148,7 @@ function isValidPubKey(b64_pubkey){
 
 
 function handleChallenge(ws, challenge){
-	console.log('handleChallenge');
+	//#console.log('handleChallenge');
 	if (ws.bLoggingIn)
 		sendLoginCommand(ws, challenge);
 	else // save for future login
@@ -157,12 +157,12 @@ function handleChallenge(ws, challenge){
 
 function loginToHub(){
 	if (!objMyPermanentDeviceKey)
-		return console.log("objMyPermanentDeviceKey not set yet, can't log in");
+		return undefined; //#console.log("objMyPermanentDeviceKey not set yet, can't log in");
 	if (!objMyTempDeviceKey)
-		return console.log("objMyTempDeviceKey not set yet, can't log in");
+		return undefined; //#console.log("objMyTempDeviceKey not set yet, can't log in");
 	if (!my_device_hub)
-		return console.log("my_device_hub not set yet, can't log in");
-	console.log("logging in to hub "+my_device_hub);
+		return undefined; //#console.log("my_device_hub not set yet, can't log in");
+	//#console.log("logging in to hub "+my_device_hub);
 	network.findOutboundPeerOrConnect(conf.WS_PROTOCOL+my_device_hub, function onLocatedHubForLogin(err, ws){
 		if (err) {
 			if(loginHubTimeoutDoneCount > 2)
@@ -185,7 +185,7 @@ function loginToHub(){
 			ws.bLoggingIn = true;
 			loginHubTimeoutCount = 0;
 		}
-		console.log('done loginToHub');
+		//#console.log('done loginToHub');
 	});
 }
 
@@ -231,7 +231,7 @@ function createTempPubkeyPackage(temp_pubkey){
 function genPrivKey(){
 	var privKey;
 	do {
-		console.log("generating new priv key");
+		//#console.log("generating new priv key");
 		privKey = crypto.randomBytes(32);
 	}
 	while (!ecdsa.privateKeyVerify(privKey));
@@ -244,24 +244,24 @@ function rotateTempDeviceKeyIfCouldBeAlreadyUsed(){
 	var actual_interval = Date.now() - last_rotate_wake_ts;
 	last_rotate_wake_ts = Date.now();
 	if (actual_interval > TEMP_DEVICE_KEY_ROTATION_PERIOD + 1000)
-		return console.log("woke up after sleep or high load, will skip rotation");
+		return undefined; //#console.log("woke up after sleep or high load, will skip rotation");
 	if (objMyTempDeviceKey.use_count === 0) // new key that was never used yet
-		return console.log("the current temp key was not used yet, will not rotate");
+		return undefined; //#console.log("the current temp key was not used yet, will not rotate");
 	// if use_count === null, the key was set at start up, it could've been used before
 	rotateTempDeviceKey();
 }
 
 function rotateTempDeviceKey(){
 	if (!saveTempKeys)
-		return console.log("no saving function");
-	console.log("will rotate temp device key");
+		return undefined; //#console.log("no saving function");
+	//#console.log("will rotate temp device key");
 	network.findOutboundPeerOrConnect(conf.WS_PROTOCOL+my_device_hub, function onLocatedHubForRotation(err, ws){
 		if (err)
-			return console.log('will not rotate because: '+err);
+			return undefined; //#console.log('will not rotate because: '+err);
 		if (ws.readyState !== ws.OPEN)
-			return console.log('will not rotate because connection is not open');
+			return undefined; //#console.log('will not rotate because connection is not open');
 		if (!ws.bLoggedIn)
-			return console.log('will not rotate because not logged in'); // reconnected and not logged in yet
+			return undefined; //#console.log('will not rotate because not logged in'); // reconnected and not logged in yet
 		var new_priv_key = genPrivKey();
 		var objNewMyTempDeviceKey = {
 			use_count: 0,
@@ -270,7 +270,7 @@ function rotateTempDeviceKey(){
 		};
 		saveTempKeys(new_priv_key, objMyTempDeviceKey.priv, function(err){
 			if (err){
-				console.log('failed to save new temp keys, canceling: '+err);
+				//#console.log('failed to save new temp keys, canceling: '+err);
 				return;
 			}
 			objMyPrevTempDeviceKey = objMyTempDeviceKey;
@@ -285,11 +285,11 @@ function scheduleTempDeviceKeyRotation(){
 	if (bScheduledTempDeviceKeyRotation)
 		return;
 	bScheduledTempDeviceKeyRotation = true;
-	console.log('will schedule rotation in 1 minute');
+	//#console.log('will schedule rotation in 1 minute');
 	setTimeout(function(){
 		// due to timeout, we are probably last to request (and receive) this lock
 		mutex.lock(["from_hub"], function(unlock){
-			console.log("will schedule rotation");
+			//#console.log("will schedule rotation");
 			rotateTempDeviceKeyIfCouldBeAlreadyUsed();
 			last_rotate_wake_ts = Date.now();
 			setInterval(rotateTempDeviceKeyIfCouldBeAlreadyUsed, TEMP_DEVICE_KEY_ROTATION_PERIOD);
@@ -316,21 +316,21 @@ function decryptPackage(objEncryptedPackage){
 			objMyTempDeviceKey.use_count++;
 		else
 			objMyTempDeviceKey.use_count = 1;
-		console.log("message encrypted to temp key");
+		//#console.log("message encrypted to temp key");
 	}
 	else if (objMyPrevTempDeviceKey && objEncryptedPackage.dh.recipient_ephemeral_pubkey === objMyPrevTempDeviceKey.pub_b64){
 		priv_key = objMyPrevTempDeviceKey.priv;
-		console.log("message encrypted to prev temp key");
+		//#console.log("message encrypted to prev temp key");
 		//console.log("objMyPrevTempDeviceKey: "+JSON.stringify(objMyPrevTempDeviceKey));
 		//console.log("prev temp private key buf: ", priv_key);
 		//console.log("prev temp private key b64: "+priv_key.toString('base64'));
 	}
 	else if (objEncryptedPackage.dh.recipient_ephemeral_pubkey === objMyPermanentDeviceKey.pub_b64){
 		priv_key = objMyPermanentDeviceKey.priv;
-		console.log("message encrypted to permanent key");
+		//#console.log("message encrypted to permanent key");
 	}
 	else{
-		console.log("message encrypted to unknown key");
+		//#console.log("message encrypted to unknown key");
 		setTimeout(function(){
 			throw Error("message encrypted to unknown key, device "+my_device_address+", len="+objEncryptedPackage.encrypted_message.length+". The error might be caused by restoring from an old backup or using the same keys on another device.");
 		}, 100);
@@ -362,10 +362,10 @@ function decryptPackage(objEncryptedPackage){
 	breadcrumbs.add("decrypted lengths: "+decrypted1.length+" + "+decrypted2.length);
 	var decrypted_message_buf = Buffer.concat([decrypted1, decrypted2]);
 	var decrypted_message = decrypted_message_buf.toString("utf8");
-	console.log("decrypted: "+decrypted_message);
+	//#console.log("decrypted: "+decrypted_message);
 	var json = JSON.parse(decrypted_message);
 	if (json.encrypted_package){ // strip another layer of encryption
-		console.log("inner encryption");
+		//#console.log("inner encryption");
 		return decryptPackage(json.encrypted_package);
 	}
 	else
@@ -390,9 +390,9 @@ function readMessageInChunksFromOutbox(message_hash, len, handleMessage){
 }
 
 function resendStalledMessages(){
-	console.log("resending stalled messages");
+	//#console.log("resending stalled messages");
 	if (!objMyPermanentDeviceKey)
-		return console.log("objMyPermanentDeviceKey not set yet, can't resend stalled messages");
+		return undefined; //#console.log("objMyPermanentDeviceKey not set yet, can't resend stalled messages");
 	mutex.lockOrSkip(['stalled'], function(unlock){
 		var bCordova = (typeof window !== 'undefined' && window && window.cordova);
 		db.query(
@@ -400,7 +400,7 @@ function resendStalledMessages(){
 			FROM outbox JOIN correspondent_devices ON `to`=device_address \n\
 			WHERE outbox.creation_date<"+db.addTime("-1 MINUTE")+" ORDER BY outbox.creation_date", 
 			function(rows){
-				console.log(rows.length+" stalled messages");
+				//#console.log(rows.length+" stalled messages");
 				async.eachSeries(
 					rows, 
 					function(row, cb){
@@ -413,7 +413,7 @@ function resendStalledMessages(){
 							var objDeviceMessage = JSON.parse(message);
 							//if (objDeviceMessage.to !== row.to)
 							//    throw "to mismatch";
-							console.log('sending stalled '+row.message_hash);
+							//#console.log('sending stalled '+row.message_hash);
 							sendPreparedMessageToHub(row.hub, row.pubkey, row.message_hash, objDeviceMessage, {ifOk: cb, ifError: function(err){ cb(); }});
 						};
 						bCordova ? readMessageInChunksFromOutbox(row.message_hash, row.len, send) : send(row.message);
@@ -431,7 +431,7 @@ setInterval(resendStalledMessages, SEND_RETRY_PERIOD);
 // first param is either WebSocket or hostname of the hub
 function reliablySendPreparedMessageToHub(ws, recipient_device_pubkey, json, callbacks, conn){
 	var recipient_device_address = objectHash.getDeviceAddress(recipient_device_pubkey);
-	console.log('will encrypt and send to '+recipient_device_address+': '+JSON.stringify(json));
+	//#console.log('will encrypt and send to '+recipient_device_address+': '+JSON.stringify(json));
 	// encrypt to recipient's permanent pubkey before storing the message into outbox
 	var objEncryptedPackage = createEncryptedPackage(json, recipient_device_pubkey);
 	// if the first attempt fails, this will be the inner message
@@ -509,7 +509,7 @@ function createEncryptedPackage(json, recipient_device_pubkey){
 	var ecdh = crypto.createECDH('secp256k1');
 	var sender_ephemeral_pubkey = ecdh.generateKeys("base64", "compressed");
 	var shared_secret = deriveSharedSecret(ecdh, recipient_device_pubkey); // Buffer
-	console.log(shared_secret.length);
+	//#console.log(shared_secret.length);
 	// we could also derive iv from the unused bits of ecdh.computeSecret() and save some bandwidth
 	var iv = crypto.randomBytes(12); // 128 bits (16 bytes) total, we take 12 bytes for random iv and leave 4 bytes for the counter
 	var cipher = crypto.createCipheriv("aes-128-gcm", shared_secret, iv);
@@ -645,7 +645,7 @@ function handlePairingMessage(json, device_pubkey, callbacks){
 // correspondents
 
 function addUnconfirmedCorrespondent(device_pubkey, device_hub, device_name, onDone){
-	console.log("addUnconfirmedCorrespondent");
+	//#console.log("addUnconfirmedCorrespondent");
 	var device_address = objectHash.getDeviceAddress(device_pubkey);
 	db.query(
 		"INSERT "+db.getIgnore()+" INTO correspondent_devices (device_address, pubkey, hub, name, is_confirmed) VALUES (?,?,?,?,0)", 
@@ -716,9 +716,9 @@ function removeCorrespondentDevice(device_address, onDone){
 
 
 function getWitnessesFromHub(cb){
-	console.log('getWitnessesFromHub');
+	//#console.log('getWitnessesFromHub');
 	if (!my_device_hub){
-		console.log('getWitnessesFromHub: no hub yet');
+		//#console.log('getWitnessesFromHub: no hub yet');
 		return setTimeout(function(){
 			getWitnessesFromHub(cb);
 		}, 2000);

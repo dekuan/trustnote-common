@@ -225,7 +225,7 @@ function validateDefinition(conn, arrDefinition, objUnit, objValidationState, bA
 					return cb("invalid address");
 				storage.readDefinitionByAddress(conn, other_address, objValidationState.last_ball_mci, {
 					ifFound: function(arrInnerAddressDefinition){
-						console.log("inner address:", arrInnerAddressDefinition);
+						//#console.log("inner address:", arrInnerAddressDefinition);
 						evaluate(arrInnerAddressDefinition, bInNegation, cb);
 					},
 					ifDefinitionNotFound: function(definition_chash){
@@ -271,7 +271,7 @@ function validateDefinition(conn, arrDefinition, objUnit, objValidationState, bA
 						var arrTemplate = JSON.parse(template);
 						try{
 							var arrFilledTemplate = replaceInTemplate(arrTemplate, params);
-							console.log(require('util').inspect(arrFilledTemplate, {depth: null}));
+							//#console.log(require('util').inspect(arrFilledTemplate, {depth: null}));
 						}
 						catch(e){
 							if (e instanceof NoVarException)
@@ -758,7 +758,7 @@ function validateAuthentifiers(conn, address, this_asset, arrDefinition, objUnit
 				// ['cosigned by', 'BASE32']
 				var cosigner_address = args;
 				var arrAuthorAddresses = objUnit.authors.map(function(author){ return author.address; });
-				console.log(op+" "+arrAuthorAddresses.indexOf(cosigner_address));
+				//#console.log(op+" "+arrAuthorAddresses.indexOf(cosigner_address));
 				cb2(arrAuthorAddresses.indexOf(cosigner_address) >= 0);
 				break;
 				
@@ -806,7 +806,7 @@ function validateAuthentifiers(conn, address, this_asset, arrDefinition, objUnit
 						AND main_chain_index<=? AND main_chain_index>=? AND sequence='good' AND is_stable=1 LIMIT 1",
 					params,
 					function(rows){
-						console.log(op+" "+feed_name+" "+rows.length);
+						//#console.log(op+" "+feed_name+" "+rows.length);
 						cb2(rows.length > 0);
 					}
 				);
@@ -878,7 +878,7 @@ function validateAuthentifiers(conn, address, this_asset, arrDefinition, objUnit
 					[arrSrcUnits, objValidationState.last_ball_mci - age, objValidationState.last_ball_mci],
 					function(rows){
 						var bSatisfies = (rows.length === arrSrcUnits.length);
-						console.log(op+" "+bSatisfies);
+						//#console.log(op+" "+bSatisfies);
 						cb2(bSatisfies);
 					}
 				);
@@ -889,7 +889,7 @@ function validateAuthentifiers(conn, address, this_asset, arrDefinition, objUnit
 				// ['has', {what: 'input', asset: 'asset or base', type: 'transfer'|'issue', own_funds: true, amount_at_least: 123, amount_at_most: 123, amount: 123, address: 'BASE32'}]
 				// when an address is included (referenced from another address), own_funds refers to outer address' funds
 				augmentMessagesAndEvaluateFilter(op, args, function(res){
-					console.log(op+" "+res, args);
+					//#console.log(op+" "+res, args);
 					cb2(res);
 				});
 				break;
@@ -926,7 +926,7 @@ function validateAuthentifiers(conn, address, this_asset, arrDefinition, objUnit
 					if (res)
 						for (var i=0; i<arrFoundObjects.length; i++)
 							sum += arrFoundObjects[i].amount;
-					console.log("sum="+sum);
+					//#console.log("sum="+sum);
 					if (typeof args.equals === "number" && sum === args.equals)
 						return cb2(true);
 					if (typeof args.at_least === "number" && sum >= args.at_least)
@@ -1048,7 +1048,7 @@ function validateAuthentifiers(conn, address, this_asset, arrDefinition, objUnit
 
 	
 	function augmentMessages(onDone){
-		console.log("augmenting");
+		//#console.log("augmenting");
 		var arrAuthorAddresses = objUnit.authors.map(function(author){ return author.address; });
 		objValidationState.arrAugmentedMessages = _.cloneDeep(objUnit.messages);
 		async.eachSeries(
@@ -1059,11 +1059,11 @@ function validateAuthentifiers(conn, address, this_asset, arrDefinition, objUnit
 				var payload = message.payload;
 				if (!payload.inputs) // skip now, will choke when checking the message
 					return cb3();
-				console.log("augmenting inputs");
+				//#console.log("augmenting inputs");
 				async.eachSeries(
 					payload.inputs,
 					function(input, cb4){
-						console.log("input", input);
+						//#console.log("input", input);
 						if (input.type === "issue"){
 							if (!input.address)
 								input.address = arrAuthorAddresses[0];
@@ -1076,7 +1076,7 @@ function validateAuthentifiers(conn, address, this_asset, arrDefinition, objUnit
 								[input.unit, input.message_index, input.output_index],
 								function(rows){
 									if (rows.length === 1){
-										console.log("src", rows[0]);
+										//#console.log("src", rows[0]);
 										input.amount = rows[0].amount;
 										input.address = rows[0].address;
 									} // else will choke when checking the message

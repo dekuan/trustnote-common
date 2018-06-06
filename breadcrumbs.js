@@ -13,7 +13,7 @@ function add(breadcrumb){
 	if (arrBreadcrumbs.length > MAX_LENGTH)
 		arrBreadcrumbs.shift(); // forget the oldest breadcrumbs
 	arrBreadcrumbs.push(Date().toString() + ': ' + breadcrumb);
-	console.log(breadcrumb);
+	//#console.log(breadcrumb);
 }
 
 function get(){

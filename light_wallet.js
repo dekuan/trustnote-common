@@ -24,11 +24,11 @@ function setLightVendorHost(light_vendor_host){
 function reconnectToLightVendor(){
 	network.findOutboundPeerOrConnect(network.light_vendor_url, function(err, ws){
 		if (err)
-			return console.log("reconnectToLightVendor: "+err);
+			return undefined; //#console.log("reconnectToLightVendor: "+err);
 		if (ws.bLightVendor)
-			return console.log("already connected to light vendor");
+			return undefined; //#console.log("already connected to light vendor");
 		if (ws.bRefreshingHistory)
-			return console.log("already refreshing history");
+			return undefined; //#console.log("already refreshing history");
 		refreshLightClientHistory();
 	});
 }
@@ -101,10 +101,10 @@ function refreshLightClientHistory(){
 		};
 		if (err)
 			return finish("refreshLightClientHistory: "+err);
-		console.log('refreshLightClientHistory connected');
+		//#console.log('refreshLightClientHistory connected');
 		// handling the response may take some time, don't send new requests
 		if (ws.bRefreshingHistory)
-			return console.log("previous refresh not finished yet");
+			return undefined; //#console.log("previous refresh not finished yet");
 		ws.bRefreshingHistory = true;
 		prepareRequestForHistory(function(objRequest){
 			if (!objRequest)

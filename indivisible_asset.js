@@ -110,15 +110,15 @@ function validatePrivatePayment(conn, objPrivateElement, objPrevPrivateElement, 
 					amount: prev_hidden_output.amount,
 					blinding: src_output.blinding
 				});
-				console.log("validation spend proof: "+JSON.stringify({
-					asset: payload.asset,
-					unit: input.unit,
-					message_index: input.message_index,
-					output_index: input.output_index,
-					address: src_output.address,
-					amount: prev_hidden_output.amount,
-					blinding: src_output.blinding
-				}));
+				//#console.log("validation spend proof: "+JSON.stringify({
+				//#	asset: payload.asset,
+				//#	unit: input.unit,
+				//#	message_index: input.message_index,
+				//#	output_index: input.output_index,
+				//#	address: src_output.address,
+				//#	amount: prev_hidden_output.amount,
+				//#	blinding: src_output.blinding
+				//#}));
 				arrFuncs.push(validateSourceOutput);
 				objValidationState.src_coin = {
 					src_output: src_output,
@@ -223,7 +223,7 @@ function validateAndSavePrivatePaymentChain(conn, arrPrivateElements, callbacks)
 	parsePrivatePaymentChain(conn, arrPrivateElements, {
 		ifError: callbacks.ifError,
 		ifOk: function(bAllStable){
-			console.log("saving private chain "+JSON.stringify(arrPrivateElements));
+			//#console.log("saving private chain "+JSON.stringify(arrPrivateElements));
 			profiler.start();
 			var arrQueries = [];
 			for (var i=0; i<arrPrivateElements.length; i++){
@@ -252,7 +252,7 @@ function validateAndSavePrivatePaymentChain(conn, arrPrivateElements, callbacks)
 				var outputs = payload.outputs;
 				for (var output_index=0; output_index<outputs.length; output_index++){
 					var output = outputs[output_index];
-					console.log("inserting output "+JSON.stringify(output));
+					//#console.log("inserting output "+JSON.stringify(output));
 					conn.addQuery(arrQueries, 
 						"INSERT "+db.getIgnore()+" INTO outputs \n\
 						(unit, message_index, output_index, amount, output_hash, asset, denomination) \n\
@@ -300,8 +300,8 @@ function updateIndivisibleOutputsThatWereReceivedUnstable(conn, onDone){
 			onUpdated();
 		});
 	}
-	
-	console.log("updatePrivateIndivisibleOutputsThatWereReceivedUnstable starting");
+
+	//#console.log("updatePrivateIndivisibleOutputsThatWereReceivedUnstable starting");
 	conn.query(
 		"SELECT unit, message_index, sequence FROM outputs "+(conf.storage === 'sqlite' ? "INDEXED BY outputsIsSerial" : "")+" \n\
 		JOIN units USING(unit) \n\
@@ -375,7 +375,7 @@ function pickIndivisibleCoinsForAmount(
 	conn, objAsset, arrAddresses, last_ball_mci, to_address, change_address, amount, tolerance_plus, tolerance_minus, bMultiAuthored, onDone)
 {
 	updateIndivisibleOutputsThatWereReceivedUnstable(conn, function(){
-		console.log("updatePrivateIndivisibleOutputsThatWereReceivedUnstable done");
+		//#console.log("updatePrivateIndivisibleOutputsThatWereReceivedUnstable done");
 		var arrPayloadsWithProofs = [];
 		var arrOutputIds = [];
 		var accumulated_amount = 0;
@@ -403,7 +403,7 @@ function pickIndivisibleCoinsForAmount(
 		}
 		
 		function pickNextCoin(remaining_amount){
-			console.log("looking for output for "+remaining_amount);
+			//#console.log("looking for output for "+remaining_amount);
 			if (remaining_amount <= 0)
 				throw Error("remaining amount is "+remaining_amount);
 			conn.query(
@@ -478,7 +478,7 @@ function pickIndivisibleCoinsForAmount(
 		}
 		
 		function issueNextCoin(remaining_amount){
-			console.log("issuing a new coin");
+			//#console.log("issuing a new coin");
 			if (remaining_amount <= 0)
 				throw Error("remaining amount is "+remaining_amount);
 			var issuer_address = objAsset.issued_by_definer_only ? objAsset.definer_address : arrAddresses[0];
@@ -541,7 +541,7 @@ function pickIndivisibleCoinsForAmount(
 							}
 							arrPayloadsWithProofs.push(objPayloadWithProof);
 							accumulated_amount += amount_to_use;
-							console.log("payloads with proofs: "+JSON.stringify(arrPayloadsWithProofs));
+							//#console.log("payloads with proofs: "+JSON.stringify(arrPayloadsWithProofs));
 							if (accumulated_amount >= amount - tolerance_minus && accumulated_amount <= amount + tolerance_plus)
 								return onDone(null, arrPayloadsWithProofs);
 							pickNextCoin(amount - accumulated_amount);
@@ -685,7 +685,7 @@ function buildPrivateElementsChain(conn, unit, message_index, output_index, payl
 }
 
 function composeIndivisibleAssetPaymentJoint(params){
-	console.log("indivisible payment from "+params.paying_addresses);
+	//#console.log("indivisible payment from "+params.paying_addresses);
 	if (!ValidationUtils.isNonemptyArray(params.fee_paying_addresses))
 		throw Error('no fee_paying_addresses');
 	composer.composeJoint({
@@ -753,7 +753,7 @@ function composeIndivisibleAssetPaymentJoint(params){
 						}
 						// messages are sorted in descending order by denomination of the coin, so shuffle them to avoid giving any clues
 						shuffleArray(arrMessages);
-						console.log("composed messages "+JSON.stringify(arrMessages));
+						//#console.log("composed messages "+JSON.stringify(arrMessages));
 						onDone(null, arrMessages, assocPrivatePayloads);
 					}
 				);
@@ -799,7 +799,7 @@ function getSavingCallbacks(to_address, callbacks){
 					throw Error("unexpected dependencies: "+arrMissingUnits.join(", "));
 				},
 				ifOk: function(objValidationState, validation_unlock){
-					console.log("Private OK "+objValidationState.sequence);
+					//#console.log("Private OK "+objValidationState.sequence);
 					if (objValidationState.sequence !== 'good'){
 						validation_unlock();
 						composer_unlock();
@@ -846,7 +846,7 @@ function getSavingCallbacks(to_address, callbacks){
 								},
 								function(err){
 									if (err){
-										console.log("===== error in precommit callback: "+err);
+										//#console.log("===== error in precommit callback: "+err);
 										bPreCommitCallbackFailed = true;
 										return cb(err);
 									}
@@ -854,7 +854,7 @@ function getSavingCallbacks(to_address, callbacks){
 										composer.postJointToLightVendorIfNecessaryAndSave(
 											objJoint, 
 											function onLightError(err){ // light only
-												console.log("failed to post indivisible payment "+unit);
+												//#console.log("failed to post indivisible payment "+unit);
 												bPreCommitCallbackFailed = true;
 												cb(err); // will rollback
 											},
@@ -876,7 +876,7 @@ function getSavingCallbacks(to_address, callbacks){
 							objJoint, objValidationState, 
 							preCommitCallback,
 							function onDone(err){
-								console.log("saved unit "+unit);
+								//#console.log("saved unit "+unit);
 								validation_unlock();
 								composer_unlock();
 								if (bPreCommitCallbackFailed)
@@ -895,7 +895,7 @@ function getSavingCallbacks(to_address, callbacks){
 					composer.postJointToLightVendorIfNecessaryAndSave(
 						objJoint, 
 						function onLightError(err){ // light only
-							console.log("failed to post indivisible payment "+unit);
+							//#console.log("failed to post indivisible payment "+unit);
 							validation_unlock();
 							composer_unlock();
 							callbacks.ifError(err);

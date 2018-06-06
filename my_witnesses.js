@@ -13,7 +13,7 @@ function readMyWitnesses(handleWitnesses, actionIfEmpty){
 		if (constants.alt === '2' && arrWitnesses.indexOf('5K7CSLTRPC5LFLOS3D34GBHG7RFD4TPO') >= 0
 			|| constants.version === '1.0' && arrWitnesses.indexOf('2FF7PSL7FYXVU5UIQHCVDTTPUOOG75GX') >= 0
 		){
-			console.log('deleting old witnesses');
+			//#console.log('deleting old witnesses');
 			db.query("DELETE FROM my_witnesses");
 			arrWitnesses = [];
 		}
@@ -21,7 +21,7 @@ function readMyWitnesses(handleWitnesses, actionIfEmpty){
 			if (actionIfEmpty === 'ignore')
 				return handleWitnesses([]);
 			if (actionIfEmpty === 'wait'){
-				console.log('no witnesses yet, will retry later');
+				//#console.log('no witnesses yet, will retry later');
 				setTimeout(function(){
 					readMyWitnesses(handleWitnesses, actionIfEmpty);
 				}, 1000);
@@ -70,9 +70,9 @@ function insertWitnesses(arrWitnesses, onDone){
 	if (arrWitnesses.length !== constants.COUNT_WITNESSES)
 		throw Error("attempting to insert wrong number of witnesses: "+arrWitnesses.length);
 	var placeholders = Array.apply(null, Array(arrWitnesses.length)).map(function(){ return '(?)'; }).join(',');
-	console.log('will insert witnesses', arrWitnesses);
+	//#console.log('will insert witnesses', arrWitnesses);
 	db.query("INSERT INTO my_witnesses (address) VALUES "+placeholders, arrWitnesses, function(){
-		console.log('inserted witnesses');
+		//#console.log('inserted witnesses');
 		if (onDone)
 			onDone();
 	});

@@ -35,9 +35,9 @@ function readJoint(conn, unit, callbacks) {
 }
 
 function readJointDirectly(conn, unit, callbacks, bRetrying) {
-	console.log("\nreading unit "+unit);
+	//#console.log("\nreading unit "+unit);
 	if (min_retrievable_mci === null){
-		console.log("min_retrievable_mci not known yet");
+		//#console.log("min_retrievable_mci not known yet");
 		setTimeout(function(){
 			readJointDirectly(conn, unit, callbacks);
 		}, 1000);
@@ -477,7 +477,7 @@ function readJointDirectly(conn, unit, callbacks, bRetrying) {
 				if (!conf.bLight && !isCorrectHash(objUnit, unit)){
 					if (bRetrying)
 						throw Error("unit hash verification failed, unit: "+unit+", objUnit: "+JSON.stringify(objUnit));
-					console.log("unit hash verification failed, will retry");
+					//#console.log("unit hash verification failed, will retry");
 					return setTimeout(function(){
 						readJointDirectly(conn, unit, callbacks, true);
 					}, 60*1000);
@@ -746,7 +746,7 @@ function getMinRetrievableMci(){
 }
 
 function updateMinRetrievableMciAfterStabilizingMci(conn, last_stable_mci, handleMinRetrievableMci){
-	console.log("updateMinRetrievableMciAfterStabilizingMci "+last_stable_mci);
+	//#console.log("updateMinRetrievableMciAfterStabilizingMci "+last_stable_mci);
 	findLastBallMciOfMci(conn, last_stable_mci, function(last_ball_mci){
 		if (last_ball_mci <= min_retrievable_mci) // nothing new
 			return handleMinRetrievableMci(min_retrievable_mci);
@@ -968,7 +968,7 @@ function generateQueriesToUnspendWitnessingOutputsSpentInArchivedUnit(conn, unit
 }
 
 function archiveJointAndDescendantsIfExists(from_unit){
-	console.log('will archive if exists from unit '+from_unit);
+	//#console.log('will archive if exists from unit '+from_unit);
 	db.query("SELECT 1 FROM units WHERE unit=?", [from_unit], function(rows){
 		if (rows.length > 0)
 			archiveJointAndDescendants(from_unit);
@@ -991,7 +991,7 @@ function archiveJointAndDescendants(from_unit){
 		function archive(){
 			arrUnits = _.uniq(arrUnits); // does not affect the order
 			arrUnits.reverse();
-			console.log('will archive', arrUnits);
+			//#console.log('will archive', arrUnits);
 			var arrQueries = [];
 			async.eachSeries(
 				arrUnits,
@@ -1007,7 +1007,7 @@ function archiveJointAndDescendants(from_unit){
 				},
 				function(){
 					conn.addQuery(arrQueries, "DELETE FROM known_bad_joints");
-					console.log('will execute '+arrQueries.length+' queries to archive');
+					//#console.log('will execute '+arrQueries.length+' queries to archive');
 					async.series(arrQueries, function(){
 						arrUnits.forEach(forgetUnit);
 						cb();
@@ -1015,13 +1015,13 @@ function archiveJointAndDescendants(from_unit){
 				}
 			);
 		}
-		
-		console.log('will archive from unit '+from_unit);
+
+			//#console.log('will archive from unit '+from_unit);
 		var arrUnits = [from_unit];
 		addChildren([from_unit]);
 	},
 	function onDone(){
-		console.log('done archiving from unit '+from_unit);
+		//#console.log('done archiving from unit '+from_unit);
 	});
 }
 
@@ -1205,7 +1205,7 @@ function determineIfHasWitnessListMutationsAlongMc(conn, objUnit, last_ball_unit
 	buildListOfMcUnitsWithPotentiallyDifferentWitnesslists(conn, objUnit, last_ball_unit, arrWitnesses, function(bHasBestParent, arrMcUnits){
 		if (!bHasBestParent)
 			return handleResult("no compatible best parent");
-		console.log("###### MC units ", arrMcUnits);
+		//#console.log("###### MC units ", arrMcUnits);
 		if (arrMcUnits.length === 0)
 			return handleResult();
 		conn.query(
@@ -1216,7 +1216,7 @@ function determineIfHasWitnessListMutationsAlongMc(conn, objUnit, last_ball_unit
 			HAVING count_matching_witnesses<?",
 			[arrWitnesses, arrMcUnits, constants.COUNT_WITNESSES - constants.MAX_WITNESS_LIST_MUTATIONS],
 			function(rows){
-				console.log(rows);
+				//#console.log(rows);
 				if (rows.length > 0)
 					return handleResult("too many ("+(constants.COUNT_WITNESSES - rows[0].count_matching_witnesses)+") witness list mutations relative to MC unit "+rows[0].unit);
 				handleResult();
@@ -1303,9 +1303,9 @@ function shrinkCache(){
 	var arrAuthorsUnits = Object.keys(assocCachedUnitAuthors);
 	var arrWitnessesUnits = Object.keys(assocCachedUnitWitnesses);
 	if (arrPropsUnits.length < MAX_ITEMS_IN_CACHE && arrAuthorsUnits.length < MAX_ITEMS_IN_CACHE && arrWitnessesUnits.length < MAX_ITEMS_IN_CACHE && arrKnownUnits.length < MAX_ITEMS_IN_CACHE)
-		return console.log('cache is small, will not shrink');
+		return undefined; //#console.log('cache is small, will not shrink');
 	var arrUnits = _.union(arrPropsUnits, arrAuthorsUnits, arrWitnessesUnits, arrKnownUnits);
-	console.log('will shrink cache, total units: '+arrUnits.length);
+	//#console.log('will shrink cache, total units: '+arrUnits.length);
 	readLastStableMcIndex(db, function(last_stable_mci){
 		var CHUNK_SIZE = 500; // there is a limit on the number of query params
 		for (var offset=0; offset<arrUnits.length; offset+=CHUNK_SIZE){
@@ -1314,7 +1314,7 @@ function shrinkCache(){
 				"SELECT unit FROM units WHERE unit IN(?) AND main_chain_index<? AND main_chain_index!=0", 
 				[arrUnits.slice(offset, offset+CHUNK_SIZE), last_stable_mci-100], 
 				function(rows){
-					console.log('will remove '+rows.length+' units from cache');
+					//#console.log('will remove '+rows.length+' units from cache');
 					rows.forEach(function(row){
 						delete assocKnownUnits[row.unit];
 						delete assocCachedUnits[row.unit];

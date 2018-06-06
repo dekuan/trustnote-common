@@ -4,7 +4,7 @@ var mysql = require('mysql');
 
 module.exports = function(connection_or_pool){
 
-	console.log("constructor");
+	//#console.log("constructor");
 	var safe_connection = connection_or_pool;
 	safe_connection.original_query = safe_connection.query;
 	safe_connection.original_release = safe_connection.release;
@@ -78,7 +78,7 @@ module.exports = function(connection_or_pool){
 		connection_or_pool.getConnection(function(err, new_connection) {
 			if (err)
 				throw err;
-			console.log("got connection from pool");
+			//#console.log("got connection from pool");
 			handleConnection(new_connection.original_query ? new_connection : module.exports(new_connection));
 		});
 	};

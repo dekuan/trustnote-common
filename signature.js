@@ -13,7 +13,7 @@ exports.verify = function(hash, b64_sig, b64_pub_key){
 		return ecdsa.verify(hash, signature, new Buffer(b64_pub_key, "base64"));
 	}
 	catch(e){
-		console.log('signature verification exception: '+e.toString());
+		//#console.log('signature verification exception: '+e.toString());
 		return false;
 	}
 };

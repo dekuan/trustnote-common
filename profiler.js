@@ -44,24 +44,24 @@ function stop(tag){
 }
 
 function print(){
-	console.log("\nProfiling results:");
+	//#console.log("\nProfiling results:");
 	var total = 0;
 	for (var tag in times)
 		total += times[tag];
 	for (var tag in times){
-		console.log(
-			pad_right(tag+": ", 33) + 
-			pad_left(times[tag], 5) + ', ' + 
-			pad_left((times[tag]/count).toFixed(2), 5) + ' per unit, ' + 
-			pad_left((100*times[tag]/total).toFixed(2), 5) + '%'
-		);
+		//#console.log(
+		//#	pad_right(tag+": ", 33) +
+		//#	pad_left(times[tag], 5) + ', ' +
+		//#	pad_left((times[tag]/count).toFixed(2), 5) + ' per unit, ' +
+		//#	pad_left((100*times[tag]/total).toFixed(2), 5) + '%'
+		//#);
 	}
-	console.log('total: '+total);
-	console.log(total/count+' per unit');
+	//#console.log('total: '+total);
+	//#console.log(total/count+' per unit');
 }
 
 function print_results() {
-	console.log("\nBenchmarking results:");
+	//#console.log("\nBenchmarking results:");
 	for (var tag in timers_results) {
 		var results = timers_results[tag];
 		var sum = 0, max = 0, min = 999999999999;
@@ -71,9 +71,9 @@ function print_results() {
 			if (v > max) max = v;
 			if (v < min) min = v;
 		}
-		console.log(tag.padding(50) + ": avg:" + Math.round(sum / results.length).toString().padding(8) + "max:" + Math.round(max).toString().padding(8) + "min:" + Math.round(min).toString().padding(8) + "records:" + results.length);
+		//#console.log(tag.padding(50) + ": avg:" + Math.round(sum / results.length).toString().padding(8) + "max:" + Math.round(max).toString().padding(8) + "min:" + Math.round(min).toString().padding(8) + "records:" + results.length);
 	}
-	console.log("\n\nStart time: " + profiler_start_ts + ", End time: " + Date.now() + " Elapsed ms:" + (Date.now() - profiler_start_ts));
+	//#console.log("\n\nStart time: " + profiler_start_ts + ", End time: " + Date.now() + " Elapsed ms:" + (Date.now() - profiler_start_ts));
 }
 
 function pad_right(str, len){
@@ -94,8 +94,8 @@ function increment(){
 }
 
 process.on('SIGINT', function(){
-	console.log = clog;
-	console.log("received sigint");
+	//#console.log = clog;
+	//#console.log("received sigint");
 	//print();
 	print_results();
 	process.exit();

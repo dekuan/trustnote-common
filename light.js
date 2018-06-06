@@ -373,12 +373,12 @@ function fixIsSpentFlag(onDone){
 		JOIN inputs ON outputs.unit=inputs.src_unit AND outputs.message_index=inputs.src_message_index AND outputs.output_index=inputs.src_output_index \n\
 		WHERE is_spent=0 AND type='transfer'",
 		function(rows){
-			console.log(rows.length+" previous outputs appear to be spent");
+			//#console.log(rows.length+" previous outputs appear to be spent");
 			if (rows.length === 0)
 				return onDone();
 			var arrQueries = [];
 			rows.forEach(function(row){
-				console.log('fixing is_spent for output', row);
+				//#console.log('fixing is_spent for output', row);
 				db.addQuery(arrQueries, 
 					"UPDATE outputs SET is_spent=1 WHERE unit=? AND message_index=? AND output_index=?", [row.unit, row.message_index, row.output_index]);
 			});
@@ -394,12 +394,12 @@ function fixInputAddress(onDone){
 		JOIN inputs ON outputs.unit=inputs.src_unit AND outputs.message_index=inputs.src_message_index AND outputs.output_index=inputs.src_output_index \n\
 		WHERE inputs.address IS NULL AND type='transfer'",
 		function(rows){
-			console.log(rows.length+" previous inputs appear to be without address");
+			//#console.log(rows.length+" previous inputs appear to be without address");
 			if (rows.length === 0)
 				return onDone();
 			var arrQueries = [];
 			rows.forEach(function(row){
-				console.log('fixing input address for output', row);
+				//#console.log('fixing input address for output', row);
 				db.addQuery(arrQueries, 
 					"UPDATE inputs SET address=? WHERE src_unit=? AND src_message_index=? AND src_output_index=?", 
 					[row.address, row.unit, row.message_index, row.output_index]);

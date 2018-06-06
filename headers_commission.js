@@ -9,7 +9,7 @@ var max_spendable_mci = null;
 
 function calcHeadersCommissions(conn, onDone){
 	// we don't require neither source nor recipient to be majority witnessed -- we don't want to return many times to the same MC index.
-	console.log("will calc h-comm");
+	//#console.log("will calc h-comm");
 	if (max_spendable_mci === null) // first calc after restart only
 		return initMaxSpendableMci(conn, function(){ calcHeadersCommissions(conn, onDone); });
 	

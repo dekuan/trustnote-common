@@ -1,6 +1,7 @@
 /*jslint node: true */
 "use strict";
 var async = require('async');
+var _profiler_ex		= require( './profilerex.js' );
 var storage = require('./storage.js');
 var graph = require('./graph.js');
 var main_chain = require('./main_chain.js');
@@ -48,8 +49,8 @@ function validate(objJoint, callbacks) {
 		throw Error("no unit object");
 	if (!objUnit.unit)
 		throw Error("no unit");
-	
-	console.log("\nvalidating joint identified by unit "+objJoint.unit.unit);
+
+	//#console.log("\nvalidating joint identified by unit "+objJoint.unit.unit);
 	
 	if (!isStringOfLength(objUnit.unit, constants.HASH_LENGTH))
 		return callbacks.ifJointError("wrong unit length");
@@ -159,7 +160,8 @@ function validate(objJoint, callbacks) {
 		if ("timestamp" in objUnit && !isPositiveInteger(objUnit.timestamp))
 			return callbacks.ifJointError("bad timestamp");
 	}
-	
+
+	_profiler_ex.begin( "#validate" );
 	mutex.lock(arrAuthorAddresses, function(unlock){
 		
 		var conn = null;
@@ -220,6 +222,11 @@ function validate(objJoint, callbacks) {
 				profiler.stop('validation-messages');
 				if(err){
 					conn.query("ROLLBACK", function(){
+
+						//	...
+						_profiler_ex.end( "#validate" );
+
+						//	...
 						conn.release();
 						unlock();
 						if (typeof err === "object"){
@@ -241,6 +248,11 @@ function validate(objJoint, callbacks) {
 				else{
 					profiler.start();
 					conn.query("COMMIT", function(){
+
+						//	...
+						_profiler_ex.end( "#validate" );
+
+						//	...
 						conn.release();
 						profiler.stop('validation-commit');
 						if (objJoint.unsigned){
@@ -787,7 +799,10 @@ function validateAuthor(conn, objAuthor, objUnit, objValidationState, callback){
 					function(row, cb){
 						graph.determineIfIncludedOrEqual(conn, row.unit, objUnit.parent_units, function(bIncluded){
 							if (bIncluded)
-								console.log("checkNoPendingChangeOfDefinitionChash: unit "+row.unit+" is included");
+							{
+								//#console.log("checkNoPendingChangeOfDefinitionChash: unit "+row.unit+" is included");
+							}
+
 							bIncluded ? cb("found") : cb();
 						});
 					},
@@ -823,7 +838,9 @@ function validateAuthor(conn, objAuthor, objUnit, objValidationState, callback){
 					function(row, cb){
 						graph.determineIfIncludedOrEqual(conn, row.unit, objUnit.parent_units, function(bIncluded){
 							if (bIncluded)
-								console.log("checkNoPendingDefinition: unit "+row.unit+" is included");
+							{
+								//#console.log("checkNoPendingDefinition: unit "+row.unit+" is included");
+							}
 							bIncluded ? cb("found") : cb();
 						});
 					},
@@ -910,7 +927,7 @@ function validateAuthor(conn, objAuthor, objUnit, objValidationState, callback){
 }
 
 function validateMessages(conn, arrMessages, objUnit, objValidationState, callback){
-	console.log("validateMessages "+objUnit.unit);
+	//#console.log("validateMessages "+objUnit.unit);
 	async.forEachOfSeries(
 		arrMessages, 
 		function(objMessage, message_index, cb){
@@ -1456,7 +1473,7 @@ function validatePaymentInputsAndOutputs(conn, payload, objAsset, message_index,
 					doubleSpendQuery, doubleSpendVars, 
 					objUnit, objValidationState, 
 					function acceptDoublespends(cb3){
-						console.log("--- accepting doublespend on unit "+objUnit.unit);
+						//#console.log("--- accepting doublespend on unit "+objUnit.unit);
 						var sql = "UPDATE inputs SET is_unique=NULL WHERE "+doubleSpendWhere+
 							" AND (SELECT is_stable FROM units WHERE units.unit=inputs.unit)=0";
 						if (!(objAsset && objAsset.is_private)){
@@ -1465,12 +1482,12 @@ function validatePaymentInputsAndOutputs(conn, payload, objAsset, message_index,
 							return cb3();
 						}
 						mutex.lock(["private_write"], function(unlock){
-							console.log("--- will ununique the conflicts of unit "+objUnit.unit);
+							//#console.log("--- will ununique the conflicts of unit "+objUnit.unit);
 							conn.query(
 								sql, 
 								doubleSpendVars, 
 								function(){
-									console.log("--- ununique done unit "+objUnit.unit);
+									//#console.log("--- ununique done unit "+objUnit.unit);
 									objValidationState.arrDoubleSpendInputs.push({message_index: message_index, input_index: input_index});
 									unlock();
 									cb3();
@@ -1614,7 +1631,7 @@ function validatePaymentInputsAndOutputs(conn, payload, objAsset, message_index,
 						if (arrInputAddresses.indexOf(owner_address) === -1)
 							arrInputAddresses.push(owner_address);
 						total_input += src_coin.amount;
-						console.log("-- val state "+JSON.stringify(objValidationState));
+						//#console.log("-- val state "+JSON.stringify(objValidationState));
 					//	if (objAsset)
 					//		profiler2.stop('validate transfer');
 						return checkInputDoubleSpend(cb);
@@ -1750,7 +1767,7 @@ function validatePaymentInputsAndOutputs(conn, payload, objAsset, message_index,
 			}
 		},
 		function(err){
-			console.log("inputs done "+payload.asset, arrInputAddresses, arrOutputAddresses);
+			//#console.log("inputs done "+payload.asset, arrInputAddresses, arrOutputAddresses);
 			if (err)
 				return callback(err);
 			if (objAsset){
@@ -1779,7 +1796,7 @@ function validatePaymentInputsAndOutputs(conn, payload, objAsset, message_index,
 								return callback(cond_err);
 							if (!bSatisfiesCondition)
 								return callback("transfer or issue condition not satisfied");
-							console.log("validatePaymentInputsAndOutputs with transfer/issue conditions done");
+							//#console.log("validatePaymentInputsAndOutputs with transfer/issue conditions done");
 							callback();
 						}
 					);
@@ -1790,7 +1807,7 @@ function validatePaymentInputsAndOutputs(conn, payload, objAsset, message_index,
 				if (total_input !== total_output + objUnit.headers_commission + objUnit.payload_commission)
 					return callback("inputs and outputs do not balance: "+total_input+" !== "+total_output+" + "+objUnit.headers_commission+" + "+objUnit.payload_commission);
 			}
-			console.log("validatePaymentInputsAndOutputs done");
+			//#console.log("validatePaymentInputsAndOutputs done");
 		//	if (objAsset)
 		//		profiler2.stop('validate IO');
 			callback();

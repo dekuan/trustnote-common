@@ -59,7 +59,7 @@ function readUnitOnMcIndex(conn, main_chain_index, handleUnit){
 }
 
 function updatePaidWitnesses(conn, cb){
-	console.log("updating paid witnesses");
+	//#console.log("updating paid witnesses");
 	profiler.start();
 	storage.readLastStableMcIndex(conn, function(last_stable_mci){
 		profiler.stop('mc-wc-readLastStableMCI');
@@ -97,7 +97,7 @@ function buildPaidWitnessesTillMainChainIndex(conn, to_main_chain_index, cb){
 }
 
 function buildPaidWitnessesForMainChainIndex(conn, main_chain_index, cb){
-	console.log("updating paid witnesses mci "+main_chain_index);
+	//#console.log("updating paid witnesses mci "+main_chain_index);
 	profiler.start();
 	conn.query(
 		"SELECT COUNT(*) AS count, SUM(CASE WHEN is_stable=1 THEN 1 ELSE 0 END) AS count_on_stable_mc \n\
@@ -132,7 +132,7 @@ function buildPaidWitnessesForMainChainIndex(conn, main_chain_index, cb){
 									buildPaidWitnesses(conn, row, arrWitnesses, cb2);
 								},
 								function(err){
-									console.log(rt, et);
+									//#console.log(rt, et);
 									if (err) // impossible
 										throw Error(err);
 									//var t=Date.now();

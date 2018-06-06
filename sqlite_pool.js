@@ -17,7 +17,7 @@ if (bCordova){
 else{
 	sqlite3 = require('sqlite3');//.verbose();
 	path = require('./desktop_app.js'+'').getAppDataDir() + '/';
-	console.log("path="+path);
+	//#console.log("path="+path);
 }
 
 module.exports = function(db_name, MAX_CONNECTIONS, bReadOnly){
@@ -38,11 +38,11 @@ module.exports = function(db_name, MAX_CONNECTIONS, bReadOnly){
 	var arrQueue = [];
 
 	function connect(handleConnection){
-		console.log("opening new db connection");
+		//#console.log("opening new db connection");
 		var db = openDb(function(err){
 			if (err)
 				throw Error(err);
-			console.log("opened db");
+			//#console.log("opened db");
 			connection.query("PRAGMA foreign_keys = 1", function(){
 				connection.query("PRAGMA busy_timeout=30000", function(){
 					connection.query("PRAGMA journal_mode=WAL", function(){
@@ -108,8 +108,11 @@ module.exports = function(db_name, MAX_CONNECTIONS, bReadOnly){
 						result = result.rows || [];
 					//console.log("changes="+this.changes+", affected="+result.affectedRows);
 					var consumed_time = Date.now() - start_ts;
-					if (consumed_time > 25)
-						console.log("long query took "+consumed_time+"ms:\n"+new_args.filter(function(a, i){ return (i<new_args.length-1); }).join(", ")+"\nload avg: "+require('os').loadavg().join(', '));
+					if (consumed_time > 25) {
+						//#console.log("long query took " + consumed_time + "ms:\n" + new_args.filter(function (a, i) {
+						//#	return (i < new_args.length - 1);
+						//#}).join(", ") + "\nload avg: " + require('os').loadavg().join(', '));
+					}
 					last_arg(result);
 				});
 				
@@ -159,9 +162,9 @@ module.exports = function(db_name, MAX_CONNECTIONS, bReadOnly){
 	function takeConnectionFromPool(handleConnection){
 
 		if (!bReady){
-			console.log("takeConnectionFromPool will wait for ready");
+			//#console.log("takeConnectionFromPool will wait for ready");
 			eventEmitter.once('ready', function(){
-				console.log("db is now ready");
+				//#console.log("db is now ready");
 				takeConnectionFromPool(handleConnection);
 			});
 			return;
@@ -362,32 +365,32 @@ function getDatabaseDirPath(){
 
 
 function createDatabaseIfNecessary(db_name, onDbReady){
-	
-	console.log('createDatabaseIfNecessary '+db_name);
+
+	//#console.log('createDatabaseIfNecessary '+db_name);
 	var initial_db_filename = 'initial.' + db_name;
 
 	// on mobile platforms, copy initial sqlite file from app root to data folder where we can open it for writing
 	if (bCordova){
-		console.log("will wait for deviceready");
+		//#console.log("will wait for deviceready");
 		document.addEventListener("deviceready", function onDeviceReady(){
-			console.log("deviceready handler");
-			console.log("data dir: "+window.cordova.file.dataDirectory);
-			console.log("app dir: "+window.cordova.file.applicationDirectory);
+			//#console.log("deviceready handler");
+			//#console.log("data dir: "+window.cordova.file.dataDirectory);
+			//#console.log("app dir: "+window.cordova.file.applicationDirectory);
 			window.requestFileSystem(LocalFileSystem.PERSISTENT, 0, function onFileSystemSuccess(fs){
 				window.resolveLocalFileSystemURL(getDatabaseDirPath() + '/' + db_name, function(fileEntry){
-					console.log("database file already exists");
+					//#console.log("database file already exists");
 					onDbReady();
 				}, function onSqliteNotInited(err) { // file not found
-					console.log("will copy initial database file");
+					//#console.log("will copy initial database file");
 					window.resolveLocalFileSystemURL(window.cordova.file.applicationDirectory + "/www/" + initial_db_filename, function(fileEntry) {
-						console.log("got initial db fileentry");
+						//#console.log("got initial db fileentry");
 						// get parent dir
 						window.resolveLocalFileSystemURL(getParentDirPath(), function(parentDirEntry) {
-							console.log("resolved parent dir");
+							//#console.log("resolved parent dir");
 							parentDirEntry.getDirectory(getDatabaseDirName(), {create: true}, function(dbDirEntry){
-								console.log("resolved db dir");
+								//#console.log("resolved db dir");
 								fileEntry.copyTo(dbDirEntry, db_name, function(){
-									console.log("copied initial cordova database");
+									//#console.log("copied initial cordova database");
 									onDbReady();
 								}, function(err){
 									throw Error("failed to copyTo: "+JSON.stringify(err));
@@ -410,16 +413,16 @@ function createDatabaseIfNecessary(db_name, onDbReady){
 	else{ // copy initial db to app folder
 		var fs = require('fs'+'');
 		fs.stat(path + db_name, function(err, stats){
-			console.log("stat "+err);
+			//#console.log("stat "+err);
 			if (!err) // already exists
 				return onDbReady();
-			console.log("will copy initial db");
+			//#console.log("will copy initial db");
 			var mode = parseInt('700', 8);
 			var parent_dir = require('path'+'').dirname(path);
 			fs.mkdir(parent_dir, mode, function(err){
-				console.log('mkdir '+parent_dir+': '+err);
+				//#console.log('mkdir '+parent_dir+': '+err);
 				fs.mkdir(path, mode, function(err){
-					console.log('mkdir '+path+': '+err);
+					//#console.log('mkdir '+path+': '+err);
 					fs.createReadStream(__dirname + '/' + initial_db_filename).pipe(fs.createWriteStream(path + db_name)).on('finish', onDbReady);
 				});
 			});

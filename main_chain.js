@@ -2,6 +2,7 @@
 "use strict";
 var _ = require('lodash');
 var async = require('async');
+var _profiler_ex			= require( './profilerex.js' );
 var db = require('./db.js');
 var constants = require("./constants.js");
 var storage = require('./storage.js');
@@ -17,14 +18,15 @@ var breadcrumbs = require('./breadcrumbs.js');
 
 
 function updateMainChain(conn, last_unit, onDone){
-	
+
+	_profiler_ex.begin( "#updateMainChain" );
 	
 	// if unit === null, read free balls
 	function findNextUpMainChainUnit(unit, handleUnit){
 		function handleProps(props){
 			if (props.best_parent_unit === null)
 				throw Error("best parent is null");
-			console.log("unit "+unit+", best parent "+props.best_parent_unit+", wlevel "+props.witnessed_level);
+			//#console.log("unit "+unit+", best parent "+props.best_parent_unit+", wlevel "+props.witnessed_level);
 			handleUnit(props.best_parent_unit);
 		}
 		function readLastUnitProps(handleLastUnitProps){
@@ -69,7 +71,7 @@ function updateMainChain(conn, last_unit, onDone){
 	}
 	
 	function checkNotRebuildingStableMainChainAndGoDown(last_main_chain_index, last_main_chain_unit){
-		console.log("checkNotRebuildingStableMainChainAndGoDown "+last_unit);
+		//#console.log("checkNotRebuildingStableMainChainAndGoDown "+last_unit);
 		profiler.start();
 		conn.query(
 			"SELECT unit FROM units WHERE is_on_main_chain=1 AND main_chain_index>? AND is_stable=1 LIMIT 1", 
@@ -135,7 +137,7 @@ function updateMainChain(conn, last_unit, onDone){
 								
 							}, 
 							function(err){
-								console.log("goDownAndUpdateMainChainIndex done");
+								//#console.log("goDownAndUpdateMainChainIndex done");
 								if (err)
 									throw Error("goDownAndUpdateMainChainIndex eachSeries failed");
 								profiler.stop('mc-goDown');
@@ -161,7 +163,7 @@ function updateMainChain(conn, last_unit, onDone){
 		}
 		
 		function propagateLIMCI(){
-			console.log("propagateLIMCI "+last_main_chain_index);
+			//#console.log("propagateLIMCI "+last_main_chain_index);
 			profiler.start();
 			// the 1st condition in WHERE is the same that was used 2 queries ago to NULL limcis
 			conn.query(
@@ -202,11 +204,11 @@ function updateMainChain(conn, last_unit, onDone){
 				}
 			);
 		}
-		
-		console.log("updateLatestIncludedMcIndex "+last_main_chain_index);
+
+		//#console.log("updateLatestIncludedMcIndex "+last_main_chain_index);
 		profiler.start();
 		conn.query("UPDATE units SET latest_included_mc_index=NULL WHERE main_chain_index>? OR main_chain_index IS NULL", [last_main_chain_index], function(res){
-			console.log("update LIMCI=NULL done, matched rows: "+res.affectedRows);
+			//#console.log("update LIMCI=NULL done, matched rows: "+res.affectedRows);
 			profiler.stop('mc-limci-set-null');
 			profiler.start();
 			conn.query(
@@ -238,7 +240,7 @@ function updateMainChain(conn, last_unit, onDone){
 					AND chunits.latest_included_mc_index IS NULL", 
 				[last_main_chain_index],
 				function(rows){
-					console.log(rows.length+" rows");
+					//#console.log(rows.length+" rows");
 					profiler.stop('mc-limci-select-initial');
 					profiler.start();
 					if (rows.length === 0 && bRebuiltMc)
@@ -246,7 +248,7 @@ function updateMainChain(conn, last_unit, onDone){
 					async.eachSeries(
 						rows,
 						function(row, cb){
-							console.log(row.main_chain_index, row.unit);
+							//#console.log(row.main_chain_index, row.unit);
 							conn.query("UPDATE units SET latest_included_mc_index=? WHERE unit=?", [row.main_chain_index, row.unit], function(){ cb(); });
 						},
 						function(){
@@ -269,10 +271,10 @@ function updateMainChain(conn, last_unit, onDone){
 
 	
 	function updateStableMcFlag(){
-		console.log("updateStableMcFlag");
+		//#console.log("updateStableMcFlag");
 		profiler.start();
 		readLastStableMcUnit(function(last_stable_mc_unit){
-			console.log("last stable mc unit "+last_stable_mc_unit);
+			//#console.log("last stable mc unit "+last_stable_mc_unit);
 			storage.readWitnesses(conn, last_stable_mc_unit, function(arrWitnesses){
 				conn.query("SELECT unit, is_on_main_chain, main_chain_index, level FROM units WHERE best_parent_unit=?", [last_stable_mc_unit], function(rows){
 					if (rows.length === 0){
@@ -392,14 +394,17 @@ function updateMainChain(conn, last_unit, onDone){
 
 	
 	function finish(){
+		//	...
+		_profiler_ex.end( "#updateMainChain" );
+
 		profiler.stop('mc-stableFlag');
-		console.log("done updating MC\n");
+		//#console.log("done updating MC\n");
 		if (onDone)
 			onDone();
 	}
-	
-	
-	console.log("\nwill update MC");
+
+
+	//#console.log("\nwill update MC");
 	//finish();
 	goUpFromUnit(last_unit);
 	
@@ -659,7 +664,7 @@ function determineIfStableInLaterUnits(conn, earlier_unit, arrLaterUnits, handle
 // If it appears to be stable, its MC index will be marked as stable, as well as all preceeding MC indexes
 function determineIfStableInLaterUnitsAndUpdateStableMcFlag(conn, earlier_unit, arrLaterUnits, bStableInDb, handleResult){
 	determineIfStableInLaterUnits(conn, earlier_unit, arrLaterUnits, function(bStable){
-		console.log("determineIfStableInLaterUnits", earlier_unit, arrLaterUnits, bStable);
+		//#console.log("determineIfStableInLaterUnits", earlier_unit, arrLaterUnits, bStable);
 		if (!bStable)
 			return handleResult(bStable);
 		if (bStable && bStableInDb)
@@ -728,7 +733,7 @@ function markMcIndexStable(conn, mci, onDone){
 							throw Error("temp-bad and with content_hash?");
 						findStableConflictingUnits(row, function(arrConflictingUnits){
 							var sequence = (arrConflictingUnits.length > 0) ? 'final-bad' : 'good';
-							console.log("unit "+row.unit+" has competitors "+arrConflictingUnits+", it becomes "+sequence);
+							//#console.log("unit "+row.unit+" has competitors "+arrConflictingUnits+", it becomes "+sequence);
 							conn.query("UPDATE units SET sequence=? WHERE unit=?", [sequence, row.unit], function(){
 								if (sequence === 'good')
 									conn.query("UPDATE inputs SET is_unique=1 WHERE unit=?", [row.unit], function(){ cb(); });

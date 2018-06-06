@@ -44,7 +44,7 @@ function getAppRootDir(){
 // read app name from the topmost package.json
 function getAppName(){
 	var appDir = getAppRootDir();
-	console.log("app dir "+appDir);
+	//#console.log("app dir "+appDir);
 	return require(appDir + '/package.json').name;
 }
 
